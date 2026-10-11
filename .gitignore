@@ -1,0 +1,15 @@
+# build output (l'installatore si pubblica nelle Releases)
+dist/
+app/Zapp2md.exe
+
+# ambienti e cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.cache.sqlite
+*.log.txt
+
+# file di lavoro locali
+_t/
+whatsapp2md/
