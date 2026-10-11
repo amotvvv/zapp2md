@@ -70,7 +70,7 @@ Speed on a typical PC without a dedicated graphics card: a short voice message t
 | | |
 |---|---|
 | SHA256 | `4907e88320889cbf80d81feb9993ecc3ec053cfbf98a3e92c19096c8d82a3136` |
-| VirusTotal | [Scan report](https://www.virustotal.com/gui/file/4907e88320889cbf80d81feb9993ecc3ec053cfbf98a3e92c19096c8d82a3136) |
+| VirusTotal | [Scan report](https://www.virustotal.com/gui/file/4907e88320889cbf80d81feb9993ecc3ec053cfbf98a3e92c19096c8d82a3136): clean for Microsoft Defender, Kaspersky, Malwarebytes, McAfee, Symantec, Sophos and most engines. 2 of 65 engines report generic heuristic flags (Arctic Wolf *Unsafe*, Skyhigh *ObfuscatedPoly*), a known false positive for unsigned installers built with Inno Setup, whose compressed content looks obfuscated. The complete source code and build script are in this repository. |
 
 Check it yourself in PowerShell: `Get-FileHash .\Zapp2md-1.0-Setup.exe -Algorithm SHA256`
 
