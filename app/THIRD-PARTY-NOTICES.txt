@@ -1,0 +1,27 @@
+Zapp2md 1.0 - Third-party components
+=========================================
+
+The Zapp2md installer contains only the Zapp2md source code (CC BY-NC-SA 4.0,
+Copyright (c) 2026 Andrea Moretto). During installation the following components
+are downloaded from their official sources and used unmodified, each under its own
+licence:
+
+Component                     Source                              Licence
+----------------------------  ----------------------------------  ---------------------------
+uv (installer tool)           github.com/astral-sh/uv             MIT / Apache-2.0
+CPython 3.12 (standalone)     github.com/astral-sh/python-build-standalone   PSF License
+faster-whisper                pypi.org/project/faster-whisper     MIT
+CTranslate2                   pypi.org/project/ctranslate2        MIT
+Whisper large-v3-turbo model  huggingface.co (mobiuslabsgmbh / OpenAI)  MIT
+onnxruntime                   pypi.org/project/onnxruntime        MIT
+tokenizers, huggingface_hub   pypi.org                            Apache-2.0
+PyAV                          pypi.org/project/av                 BSD-3-Clause (FFmpeg: LGPL-2.1+)
+Pillow                        pypi.org/project/pillow             MIT-CMU (HPND)
+pypdfium2 / PDFium            pypi.org/project/pypdfium2          Apache-2.0 / BSD-3-Clause
+python-docx                   pypi.org/project/python-docx        MIT
+openpyxl                      pypi.org/project/openpyxl           MIT
+python-pptx                   pypi.org/project/python-pptx        MIT
+PyWinRT (winrt-*)             pypi.org/project/winrt-runtime      MIT
+NumPy                         pypi.org/project/numpy              BSD-3-Clause
+
+Text recognition (OCR) uses the engine built into Windows 10/11 (Windows.Media.Ocr).
