@@ -1,9 +1,9 @@
-﻿; Zapp2md 1.0 - installatore
+﻿; Zapp2md 1.1 - installatore
 ; Copyright (c) 2026 Andrea Moretto - CC BY-NC-SA 4.0 (uso non commerciale)
 ; Compilazione: build.bat (richiede Inno Setup 6, gratuito: https://jrsoftware.org/isinfo.php)
 
 #define MyAppName "Zapp2md"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1"
 #define MyAppPublisher "Andrea Moretto"
 #define MyAppURL "https://www.linkedin.com/in/andrea-moretto-mba/"
 #define SrcDir "..\app"
@@ -19,12 +19,12 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 AppContact={#MyAppURL}
 AppCopyright=Copyright (c) 2026 {#MyAppPublisher}
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion=1.1.0.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoCopyright=Copyright (c) 2026 {#MyAppPublisher} - CC BY-NC-SA 4.0
 VersionInfoDescription={#MyAppName} {#MyAppVersion} Setup
 VersionInfoProductName={#MyAppName}
-VersionInfoProductVersion=1.0.0.0
+VersionInfoProductVersion=1.1.0.0
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
@@ -52,6 +52,7 @@ CloseApplications=yes
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "pt"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [CustomMessages]
 it.AuthorLine=Zapp2md {#MyAppVersion}  ·  Autore: {#MyAppPublisher}
@@ -90,6 +91,18 @@ en.GuideName=Zapp2md guide
 it.LicenseName=Licenza Zapp2md
 pt.LicenseName=Licença Zapp2md
 en.LicenseName=Zapp2md licence
+es.AuthorLine=Zapp2md {#MyAppVersion}  ·  Autor: {#MyAppPublisher}
+es.LicenseLine=Licencia CC BY-NC-SA 4.0: copia y distribución libres y gratuitas, venta prohibida.
+es.WelcomeExtra=Convierte los chats de WhatsApp exportados (voz, fotos, vídeos, documentos) en un documento para analizar con un LLM como Claude o ChatGPT, o con otras herramientas de IA. Todo se queda en tu ordenador. En la instalación solo se descarga lo que falta (hasta unos 2 GB).
+es.DownloadingDeps=Preparando los componentes: solo se descarga lo que falta (como máximo unos 2 GB). El progreso se muestra en la ventana negra: no la cierres...
+es.DepsFailed=La descarga de los componentes no se ha completado (código %1).%n%nComprueba la conexión a internet y luego abre "Reparar Zapp2md" en el menú Inicio para completar la instalación.
+es.PathTooLong=La ruta elegida es demasiado larga (máximo 90 caracteres). Elige una carpeta con una ruta más corta.
+es.RepairName=Reparar Zapp2md
+es.RepairFullName=Reparar Zapp2md (reinstalación completa)
+es.FullTask=Instalación completa: volver a descargar todos los componentes, sin reutilizar los que ya están en el PC
+es.ExtraGroup=Opciones de instalación:
+es.GuideName=Guía de Zapp2md
+es.LicenseName=Licencia de Zapp2md
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
