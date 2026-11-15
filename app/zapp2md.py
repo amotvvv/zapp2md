@@ -51,9 +51,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from i18n import LANGS, get_lang, set_lang, t  # noqa: E402
+from i18n import LANGS, get_lang, parse_user_date, set_lang, t  # noqa: E402
 
-VERSION = "1.0"
+VERSION = "1.1"
 AUTHOR = "Andrea Moretto"
 AUTHOR_URL = "https://www.linkedin.com/in/andrea-moretto-mba/"
 CACHE_SCHEMA = "1"
@@ -926,7 +926,8 @@ class Renderer:
 
 
 def build_markdown(msgs: list[Message], title: str, results: dict, unreferenced: list[str],
-                   missing: list[str], args, source: Path, part_label: str | None = None) -> str:
+                   missing: list[str], args, source: Path, part_label: str | None = None,
+                   range_info: dict | None = None) -> str:
     r = Renderer(results, args)
     L: list[str] = []
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -939,6 +940,8 @@ def build_markdown(msgs: list[Message], title: str, results: dict, unreferenced:
         first, last = msgs[0].ts, msgs[-1].ts
         L.append("- " + t("md_period", a=f"{first:%Y-%m-%d %H:%M}", b=f"{last:%Y-%m-%d %H:%M}",
                               days=(last.date() - first.date()).days + 1, active=len({m.ts.date() for m in msgs})))
+    if range_info:
+        L.append("- " + t("md_range", **range_info))
     L.append("- " + t("md_messages", n=len(msgs), s=sum(1 for m in msgs if m.sender is None)))
     per: dict[str, list[Message]] = defaultdict(list)
     for m in msgs:
@@ -1022,20 +1025,31 @@ def write_atomic(path: Path, text: str) -> None:
 # Interazione e controlli
 # --------------------------------------------------------------------------- #
 
+def range_suffix(d_from, d_to) -> str:
+    """Suffisso del nome del file .md quando si sceglie un intervallo di date."""
+    if d_from and d_to:
+        return f"_{d_from.isoformat()}_{d_to.isoformat()}"
+    if d_from:
+        return f"_from-{d_from.isoformat()}"
+    if d_to:
+        return f"_to-{d_to.isoformat()}"
+    return ""
+
+
 def system_ui_language() -> str:
     """Lingua dell'interfaccia di Windows, se è una delle tre supportate (altrimenti inglese)."""
     try:
         import ctypes
 
         primary = ctypes.windll.kernel32.GetUserDefaultUILanguage() & 0x3FF
-        return {0x10: "it", 0x16: "pt", 0x09: "en"}.get(primary, "en")
+        return {0x10: "it", 0x16: "pt", 0x09: "en", 0x0A: "es"}.get(primary, "en")
     except Exception:
         return "en"
 
 
 def ask_ui_language() -> str:
     default = system_ui_language()
-    codes = ["it", "pt", "en"]
+    codes = ["it", "pt", "en", "es"]
     print()
     print("  zapp2md " + VERSION)
     print()
@@ -1043,10 +1057,10 @@ def ask_ui_language() -> str:
         print(f"  {i}) {LANGS[c]}" + ("  *" if c == default else ""))
     while True:
         try:
-            c = input(f"  Lingua / Idioma / Language [1-3, Enter = {codes.index(default) + 1}]: ").strip().lower()
+            c = input(f"  Lingua / Idioma / Language [1-4, Enter = {codes.index(default) + 1}]: ").strip().lower()
         except EOFError:
             return default
-        m = {"1": "it", "2": "pt", "3": "en", "it": "it", "pt": "pt", "en": "en", "": default}
+        m = {"1": "it", "2": "pt", "3": "en", "4": "es", "it": "it", "pt": "pt", "en": "en", "es": "es", "": default}
         if c in m:
             print()
             return m[c]
@@ -1125,7 +1139,7 @@ def main(argv=None) -> int:
         description="WhatsApp export (zip/folder) -> Markdown for LLMs (Claude, ChatGPT, Gemini...). Italiano / Português / English.")
     ap.add_argument("input", nargs="?", help=".zip exported from WhatsApp, the extracted folder, or the chat .txt")
     ap.add_argument("-o", "--output", help="output .md file (default: next to the input)")
-    ap.add_argument("--ui", choices=list(LANGS), help="interface and document language: it, pt, en")
+    ap.add_argument("--ui", choices=list(LANGS), help="interface and document language: it, pt, en, es")
     ap.add_argument("--speech-lang", help="main spoken language of the chat (it, pt, en, es, fr, de, ... or auto); "
                                           "default = --ui language")
     ap.add_argument("--model", default=DEFAULT_MODEL,
@@ -1135,6 +1149,10 @@ def main(argv=None) -> int:
     ap.add_argument("--no-audio", action="store_true", help="do not transcribe audio (quick test)")
     ap.add_argument("--no-ocr", action="store_true", help="do not read text in images")
     ap.add_argument("--split-by-year", action="store_true", help="also write one .md file per year")
+    ap.add_argument("--from", dest="date_from", metavar="DATE",
+                    help="keep only messages from this date (YYYY-MM-DD or DD/MM/YYYY), inclusive")
+    ap.add_argument("--to", dest="date_to", metavar="DATE",
+                    help="keep only messages up to this date (YYYY-MM-DD or DD/MM/YYYY), inclusive")
     ap.add_argument("--date-format", default="auto", choices=["auto", "dmy", "mdy", "ymd"],
                     help="date order in the chat file (default: automatic)")
     ap.add_argument("--max-ocr-pages", type=int, default=50, help="max scanned pages OCR'd per PDF")
@@ -1205,7 +1223,18 @@ def run(args) -> int:
     if not inp.exists():
         raise UserError(t("err_notfound", p=inp))
     base = inp.with_suffix("") if inp.is_file() else inp
-    out_md = Path(args.output).resolve() if args.output else base.parent / (base.name + ".md")
+    try:
+        d_from = parse_user_date(args.date_from)
+    except ValueError:
+        raise UserError(t("err_date", v=args.date_from))
+    try:
+        d_to = parse_user_date(args.date_to)
+    except ValueError:
+        raise UserError(t("err_date", v=args.date_to))
+    if d_from and d_to and d_from > d_to:
+        raise UserError(t("err_range", a=d_from.isoformat(), b=d_to.isoformat()))
+    out_md = (Path(args.output).resolve() if args.output
+              else base.parent / (base.name + range_suffix(d_from, d_to) + ".md"))
     out_md.parent.mkdir(parents=True, exist_ok=True)
     log_path = out_md.with_suffix(".log.txt")
 
@@ -1222,7 +1251,9 @@ def run(args) -> int:
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     log.info(t("start", v=VERSION, p=inp))
-    workdir = out_md.parent / (out_md.stem + "_media")
+    # cartella dei media e cache prendono il nome dalla chat (non dal file .md): così le elaborazioni con
+    # intervalli di date diversi riusano le stesse trascrizioni
+    workdir = out_md.parent / (base.name + "_media")
     folder = prepare_input(inp, workdir)
     files = list_files(folder)
     chat_file = inp if inp.suffix.lower() == ".txt" else find_chat_file(files)
@@ -1240,6 +1271,23 @@ def run(args) -> int:
     log.info(t("messages_found", n=len(msgs), o=order, a=f"{msgs[0].ts:%Y-%m-%d}", b=f"{msgs[-1].ts:%Y-%m-%d}",
                x=t("reordered", n=unsorted) if unsorted else ""))
 
+    # allegati citati in qualunque messaggio (anche fuori intervallo): non sono "media non collegati"
+    linked = {a for m in msgs for a in m.attachments}
+    range_info = None
+    if d_from or d_to:
+        total = len(msgs)
+        first_day, last_day = msgs[0].ts.date(), msgs[-1].ts.date()
+        msgs = [m for m in msgs if (not d_from or m.ts.date() >= d_from) and (not d_to or m.ts.date() <= d_to)]
+        a_lbl = d_from.isoformat() if d_from else t("range_begin")
+        b_lbl = d_to.isoformat() if d_to else t("range_end")
+        log.info(t("range_applied", a=a_lbl, b=b_lbl, n=len(msgs), x=total - len(msgs)))
+        if not msgs:
+            msg = t("range_empty", a=first_day.isoformat(), b=last_day.isoformat())
+            log.error(msg)
+            emit("fatal", msg=msg)
+            return 4
+        range_info = dict(a=a_lbl, b=b_lbl, x=total - len(msgs), tot=total)
+
     referenced: list[str] = []
     seen: set[str] = set()
     for m in msgs:
@@ -1248,10 +1296,19 @@ def run(args) -> int:
                 seen.add(a)
                 referenced.append(a)
     missing = [a for a in referenced if a not in files]
-    unreferenced = sorted(n for n in files if n not in seen)
+    unreferenced = sorted(n for n in files if n not in linked)
+    if range_info:
+        # media non collegati: solo quelli con una data (dal nome del file) dentro l'intervallo
+        def in_range(name: str) -> bool:
+            d = date_from_filename(name)
+            if not d:
+                return False
+            day = dt.date.fromisoformat(d)
+            return (not d_from or day >= d_from) and (not d_to or day <= d_to)
+        unreferenced = [n for n in unreferenced if in_range(n)]
     to_process = [a for a in referenced if a in files] + unreferenced
 
-    cache = Cache(out_md.parent / (out_md.stem + ".cache.sqlite"))
+    cache = Cache(out_md.parent / (base.name + ".cache.sqlite"))
     try:
         results = process_media(to_process, files, args, cache)
     except KeyboardInterrupt:
@@ -1260,13 +1317,14 @@ def run(args) -> int:
     finally:
         cache.close()
 
-    write_atomic(out_md, build_markdown(msgs, title, results, unreferenced, missing, args, inp))
+    write_atomic(out_md, build_markdown(msgs, title, results, unreferenced, missing, args, inp,
+                                        range_info=range_info))
     written = [out_md]
     if args.split_by_year:
         for y in sorted({m.ts.year for m in msgs}):
             p = out_md.with_name(f"{out_md.stem}_{y}.md")
             write_atomic(p, build_markdown([m for m in msgs if m.ts.year == y], title, results, [], [],
-                                           args, inp, part_label=str(y)))
+                                           args, inp, part_label=str(y), range_info=range_info))
             written.append(p)
 
     n_err = sum(1 for r in results.values() if r.get("error"))

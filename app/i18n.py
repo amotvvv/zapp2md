@@ -1,6 +1,9 @@
-"""Testi dell'interfaccia e del documento prodotto: Italiano, Português, English."""
+"""Testi dell'interfaccia e del documento prodotto: Italiano, Português, English, Español."""
 
-LANGS = {"it": "Italiano", "pt": "Português", "en": "English"}
+import datetime as _dt
+import re as _re
+
+LANGS = {"it": "Italiano", "pt": "Português", "en": "English", "es": "Español"}
 
 T = {
     # ------------------------------------------------------------------ console
@@ -446,6 +449,249 @@ T = {
         "en": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     },
 }
+
+# ---------------------------------------------------------------------- Español
+_ES = {
+    "ask_file": "Elige el archivo .zip exportado de WhatsApp en la ventana que se abre...",
+    "ask_path": "Arrastra aquí el archivo .zip (o la carpeta del chat) y pulsa Intro: ",
+    "ask_video": "¿Transcribir también el audio de los vídeos? (más lento) [S/n]: ",
+    "yes_letters": "sy",
+    "press_enter": "Pulsa Intro para cerrar.",
+    "start": "Zapp2md {v} — entrada: {p}",
+    "extracting": "Extrayendo {z} en {d} ...",
+    "reuse_extracted": "Uso los archivos ya extraídos en: {d}",
+    "chat_found": "Chat: '{t}' (archivo {f}), {n} archivos adjuntos en la exportación.",
+    "messages_found": "Mensajes: {n} (formato de fecha '{o}', del {a} al {b}){x}",
+    "reordered": "; {n} fuera de orden, reordenados",
+    "no_messages": "No se ha reconocido ningún mensaje en el archivo del chat.",
+    "media_summary": "Multimedia: {tot} en total, {cached} ya en caché, {todo} por procesar.",
+    "audio_total": "Audio por transcribir: {d} (h:mm:ss) en {n} archivos.",
+    "eta": " | transcrito {a}/{b}, tiempo restante estimado ~{c}",
+    "media_done": "Procesamiento multimedia completado en {d}.",
+    "ocr_on": "OCR de Windows activo (idioma: {l}; disponibles: {a})",
+    "ocr_off": "OCR no disponible ({e}): no se leerá el texto de las imágenes.",
+    "loading_model": "Cargando el modelo de transcripción '{m}' (la primera vez se descarga: 1,5-3 GB)...",
+    "interrupted": "Interrumpido. El trabajo hecho está guardado: al volver a ejecutar, se reanuda desde aquí.",
+    "created": "Creado: {p}  ({s}, ~{tok} tokens estimados)",
+    "n_errors": "Atención: {n} archivos ilegibles (detalles en {f}).",
+    "done": "Hecho.",
+    "warn_omitted_partial": "Nota: adjuntos citados en el chat pero no incluidos en la exportación: {n}{v}. No se han procesado.",
+    "voice_part": " ({v} de ellos de voz)",
+    "warn_omitted": "ATENCIÓN: esta exportación se hizo SIN ARCHIVOS MULTIMEDIA: {n} adjuntos omitidos ({v} mensajes de voz). "
+                    "No están en el archivo, así que no se pueden transcribir. Vuelve a exportar el chat desde WhatsApp "
+                    "eligiendo \"Adjuntar archivos\" / \"Incluir archivos multimedia\".",
+    "md_omitted": "**Multimedia omitida en la exportación:** {n} ({v} de ellos mensajes de voz): no disponible, por lo que no se ha transcrito",
+    "hint_split": "Nota: el archivo es muy grande para una sola conversación con un LLM. Súbelo como documento de un "
+                  "proyecto o base de conocimiento (p. ej. Proyectos de Claude) o crea un archivo por año (--split-by-year).",
+    "status_ok": "ok",
+    "status_err": "ERROR",
+    "err_notfound": "ERROR: no encuentro {p}",
+    "err_input": "ERROR: entrada no reconocida: {p} (se necesita un .zip, una carpeta o el .txt del chat)",
+    "err_no_txt": "ERROR: no se ha encontrado ningún archivo .txt del chat en la exportación.",
+    "err_format": "ERROR: formato del archivo del chat no reconocido ({f}).",
+    "err_zip": "ERROR: el archivo zip está dañado o incompleto ({e}).",
+    "setup_ok": "Comprobación completada: todo listo.",
+    "setup_fail": "PROBLEMA con {c}: {e}",
+    "setup_longpath": "Sugerencia: mueve la carpeta del programa a una ruta corta, p. ej. C:\\zapp2md, y vuelve a instalar.",
+    "g_subtitle": "Chat de WhatsApp → documento para Claude, ChatGPT, Gemini y otros LLM",
+    "g_lang": "Idioma",
+    "g_input": "Exportación de WhatsApp",
+    "g_browse": "Archivo .zip…",
+    "g_folder": "Carpeta…",
+    "g_output": "Guardar en",
+    "g_output_default": "(misma carpeta que el archivo .zip)",
+    "g_change": "Cambiar…",
+    "g_options": "Opciones",
+    "g_opt_video": "Transcribir el audio de los vídeos",
+    "g_opt_ocr": "Leer el texto de las imágenes y de los PDF escaneados",
+    "g_opt_split": "Crear también un archivo por año",
+    "g_quality": "Calidad de transcripción",
+    "g_q_turbo": "Muy buena y rápida (recomendada)",
+    "g_q_best": "Máxima (unas 3 veces más lenta)",
+    "g_q_fast": "Rápida (menos precisa)",
+    "g_speech": "Idioma hablado",
+    "g_speech_auto": "Automático",
+    "g_start": "Iniciar",
+    "g_stop": "Detener",
+    "g_open_md": "Abrir el resultado",
+    "g_open_folder": "Abrir la carpeta",
+    "g_progress": "Progreso",
+    "g_ready": "Listo. Elige el archivo .zip exportado de WhatsApp y pulsa Iniciar.",
+    "g_preparing": "Preparando…",
+    "g_writing": "Escribiendo el documento…",
+    "g_remaining": "Tiempo restante: {v}",
+    "g_elapsed": "Transcurrido: {v}",
+    "g_estimating": "calculando…",
+    "g_few_seconds": "unos segundos",
+    "g_current": "Procesando: {v}",
+    "g_files": "Archivos: {a} de {b}",
+    "g_k_audio": "Audio",
+    "g_k_video": "Vídeo",
+    "g_k_image": "Imágenes",
+    "g_k_document": "Documentos",
+    "g_k_errors": "Errores",
+    "g_tab_errors": "Errores y avisos",
+    "g_tab_log": "Registro",
+    "g_done_title": "Completado",
+    "g_done_msg": "Documento creado:\n{p}\n\nMensajes: {m}   ·   tokens estimados: {tok}",
+    "g_done_errors": "{n} archivos ilegibles: consulta la pestaña \"Errores y avisos\".",
+    "g_stopped": "Detenido. El trabajo ya hecho está guardado: al pulsar Iniciar se reanuda desde aquí.",
+    "g_failed": "El procesamiento ha fallado",
+    "g_crash": "El motor de procesamiento se ha cerrado inesperadamente (código {c}).\nLos detalles están en la pestaña \"Registro\".",
+    "g_confirm_stop": "¿Detener el procesamiento?\nEl trabajo hecho hasta ahora queda guardado.",
+    "g_confirm_close": "Procesamiento en curso. ¿Cerrar y detenerlo?\nEl trabajo hecho hasta ahora queda guardado.",
+    "g_no_input": "Elige primero el archivo .zip exportado de WhatsApp.",
+    "g_about": "Acerca de",
+    "g_about_text": "Zapp2md {v}\n\nAutor: {a}\n\nLicencia Creative Commons BY-NC-SA 4.0: puedes usarlo, copiarlo y distribuirlo "
+                    "gratuitamente, manteniendo el nombre del autor. Se prohíbe la venta y cualquier uso comercial.\n\n"
+                    "Todo se procesa en tu ordenador: no se envía ningún dato a servicios externos.\n\n"
+                    "WhatsApp es una marca de WhatsApp LLC. Este programa no está afiliado a WhatsApp.",
+    "g_license": "Licencia",
+    "g_select_zip": "Elige la exportación de WhatsApp",
+    "g_select_out": "Elige dónde guardar el resultado",
+    "g_not_installed": "Instalación incompleta: falta {p}.\nUsa \"Reparar Zapp2md\" en el menú Inicio.",
+    "md_title": "Chat de WhatsApp: {t}",
+    "md_generated": "*Generado por Zapp2md {v} el {d} a partir de `{s}`.*",
+    "md_summary": "Resumen",
+    "md_period": "**Periodo:** del {a} al {b} ({days} días, {active} con mensajes)",
+    "md_messages": "**Mensajes:** {n} ({s} del sistema)",
+    "md_participants": "**Participantes:**",
+    "md_participant": "{s}: {n} mensajes, ~{w} palabras de texto, {a} adjuntos (primero {f}, último {l})",
+    "md_attachments": "**Adjuntos:** {n} ({p})",
+    "md_not_included": "{n} no incluidos",
+    "md_audio_total": "; audio total {d}",
+    "md_unreadable": "**Archivos ilegibles:** {n} (ver las notas \"error de extracción\")",
+    "md_per_year": "**Mensajes por año:** ",
+    "md_howto": "Cómo leer este documento",
+    "md_howto_lines": [
+        "La conversación está en orden cronológico, dividida por días (`### AAAA-MM-DD, día`).",
+        "Cada mensaje: `**[HH:MM] Remitente:** texto`. Los mensajes del sistema están en cursiva.",
+        "Los adjuntos se indican con una etiqueta entre corchetes ([MENSAJE DE VOZ], [AUDIO], [IMAGEN], [STICKER], "
+        "[VÍDEO], [DOCUMENTO], [ARCHIVO]) seguida del nombre del archivo y sus metadatos; el contenido extraído está en las líneas citadas con `>`.",
+        "Las transcripciones (reconocimiento de voz automático) y el texto de las imágenes (OCR) se generan automáticamente y "
+        "pueden contener errores, sobre todo en nombres propios y audios con ruido. De las imágenes solo está disponible el "
+        "texto visible, no una descripción del contenido visual.",
+        "En las transcripciones largas `[m:ss]` indica el punto del mensaje de voz.",
+        "Los documentos largos tienen un extracto donde se enviaron y el texto completo en el **Apéndice**.",
+    ],
+    "md_conversation": "Conversación",
+    "md_unref": "Multimedia presente en la exportación pero no vinculada a ningún mensaje",
+    "md_unref_note": "*Ordenados por nombre; la fecha, cuando se puede deducir del nombre del archivo, se indica entre paréntesis.*",
+    "md_missing": "Adjuntos citados en el chat pero ausentes de la exportación",
+    "md_appendix": "Apéndice: texto completo de los documentos",
+    "md_appendix_item": "Apéndice {id}",
+    "system": "(sistema)",
+    "k_image": "IMAGEN",
+    "k_sticker": "STICKER",
+    "k_audio": "AUDIO",
+    "k_voice": "MENSAJE DE VOZ",
+    "k_video": "VÍDEO",
+    "k_document": "DOCUMENTO",
+    "k_other": "ARCHIVO",
+    "k_missing": "ADJUNTO NO INCLUIDO EN LA EXPORTACIÓN",
+    "m_duration": "duración {v}",
+    "m_language": "idioma {v}",
+    "m_pages": "páginas: {v}",
+    "m_slides": "diapositivas: {v}",
+    "m_sheets": "hojas: {v}",
+    "m_ocr_pages": "páginas leídas con OCR: {v}",
+    "m_title": "título: {v}",
+    "m_author": "autor: {v}",
+    "m_created": "creado: {v}",
+    "m_taken": "tomada: {v}",
+    "m_camera": "cámara: {v}",
+    "m_gps": "GPS: {v}",
+    "m_recorded": "grabado: {v}",
+    "m_animated": "animada",
+    "x_error": "(error de extracción: {e})",
+    "x_no_speech": "(no se ha reconocido voz)",
+    "x_transcript": "Transcripción",
+    "x_ocr": "Texto en la imagen (OCR)",
+    "x_content": "Contenido",
+    "x_excerpt": "{h} — extracto, texto completo en el Apéndice {id}{n}:",
+    "x_truncated": " (truncado a {a} de {b} caracteres)",
+    "x_caption": "Pie de foto/texto: ",
+    "n_video_off": "transcripción de vídeo desactivada",
+    "n_audio_off": "transcripción de audio desactivada",
+    "n_no_audio_track": "sin pista de audio",
+    "n_heic": "formato HEIC no legible",
+    "n_pdf_password": "PDF protegido con contraseña",
+    "c_sheet": "[Hoja: {v}]",
+    "c_table": "[Tabla {v}]",
+    "c_slide": "[Diapositiva {v}]",
+    "c_notes": "Notas: ",
+    "c_page": "[Página {v}]",
+    "c_rows_omitted": "[... filas siguientes omitidas]",
+    "weekdays": ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+}
+for _k, _v in _ES.items():
+    T[_k]["es"] = _v
+
+# ---------------------------------------------------------------------- filtro per intervallo di date (v1.1)
+T.update({
+    "g_range": {"it": "Intervallo di date (facoltativo)", "pt": "Intervalo de datas (opcional)",
+                "en": "Date range (optional)", "es": "Intervalo de fechas (opcional)"},
+    "g_from": {"it": "Dal", "pt": "De", "en": "From", "es": "Desde"},
+    "g_to": {"it": "Al", "pt": "Até", "en": "To", "es": "Hasta"},
+    "g_date_hint": {
+        "it": "GG/MM/AAAA o AAAA-MM-GG · vuoto = nessun limite",
+        "pt": "DD/MM/AAAA ou AAAA-MM-DD · vazio = sem limite",
+        "en": "DD/MM/YYYY or YYYY-MM-DD · empty = no limit",
+        "es": "DD/MM/AAAA o AAAA-MM-DD · vacío = sin límite",
+    },
+    "g_clear": {"it": "Azzera", "pt": "Limpar", "en": "Clear", "es": "Borrar"},
+    "err_date": {
+        "it": "Data non valida: \"{v}\". Usa GG/MM/AAAA oppure AAAA-MM-GG.",
+        "pt": "Data inválida: \"{v}\". Use DD/MM/AAAA ou AAAA-MM-DD.",
+        "en": "Invalid date: \"{v}\". Use DD/MM/YYYY or YYYY-MM-DD.",
+        "es": "Fecha no válida: \"{v}\". Usa DD/MM/AAAA o AAAA-MM-DD.",
+    },
+    "err_range": {
+        "it": "La data iniziale ({a}) è successiva a quella finale ({b}).",
+        "pt": "A data inicial ({a}) é posterior à data final ({b}).",
+        "en": "The start date ({a}) is after the end date ({b}).",
+        "es": "La fecha inicial ({a}) es posterior a la final ({b}).",
+    },
+    "range_begin": {"it": "inizio della chat", "pt": "início da conversa", "en": "start of the chat", "es": "inicio del chat"},
+    "range_end": {"it": "fine della chat", "pt": "fim da conversa", "en": "end of the chat", "es": "final del chat"},
+    "range_applied": {
+        "it": "Intervallo di date: dal {a} al {b}: {n} messaggi inclusi, {x} esclusi.",
+        "pt": "Intervalo de datas: de {a} a {b}: {n} mensagens incluídas, {x} excluídas.",
+        "en": "Date range: from {a} to {b}: {n} messages included, {x} excluded.",
+        "es": "Intervalo de fechas: del {a} al {b}: {n} mensajes incluidos, {x} excluidos.",
+    },
+    "range_empty": {
+        "it": "Nessun messaggio nell'intervallo di date scelto (la chat va dal {a} al {b}).",
+        "pt": "Nenhuma mensagem no intervalo de datas escolhido (a conversa vai de {a} a {b}).",
+        "en": "No messages in the chosen date range (the chat goes from {a} to {b}).",
+        "es": "Ningún mensaje en el intervalo de fechas elegido (el chat va del {a} al {b}).",
+    },
+    "md_range": {
+        "it": "**Intervallo selezionato:** dal {a} al {b} ({x} messaggi fuori intervallo esclusi, su {tot} totali)",
+        "pt": "**Intervalo selecionado:** de {a} a {b} ({x} mensagens fora do intervalo excluídas, de {tot} no total)",
+        "en": "**Selected range:** from {a} to {b} ({x} messages outside the range excluded, out of {tot})",
+        "es": "**Intervalo seleccionado:** del {a} al {b} ({x} mensajes fuera del intervalo excluidos, de {tot} en total)",
+    },
+})
+
+_DATE_RES = [
+    (_re.compile(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$"), (1, 2, 3)),  # AAAA-MM-GG
+    (_re.compile(r"^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$"), (3, 2, 1)),  # GG/MM/AAAA
+]
+
+
+def parse_user_date(text: str) -> "_dt.date | None":
+    """Data inserita dall'utente: AAAA-MM-GG oppure GG/MM/AAAA (anche con - o .). Vuoto -> None.
+    Solleva ValueError se il testo non è una data valida."""
+    s = (text or "").strip()
+    if not s:
+        return None
+    for rx, (iy, im, id_) in _DATE_RES:
+        m = rx.match(s)
+        if m:
+            return _dt.date(int(m.group(iy)), int(m.group(im)), int(m.group(id_)))
+    raise ValueError(s)
+
 
 _lang = "it"
 

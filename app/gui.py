@@ -23,9 +23,9 @@ from tkinter import filedialog, messagebox, ttk
 
 APP_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(APP_DIR))
-from i18n import LANGS, set_lang, t  # noqa: E402
+from i18n import LANGS, parse_user_date, set_lang, t  # noqa: E402
 
-VERSION = "1.0"
+VERSION = "1.1"
 AUTHOR = "Andrea Moretto"
 AUTHOR_URL = "https://www.linkedin.com/in/andrea-moretto-mba/"
 ENGINE = APP_DIR / "zapp2md.py"
@@ -58,7 +58,7 @@ def system_ui_language() -> str:
         import ctypes
 
         primary = ctypes.windll.kernel32.GetUserDefaultUILanguage() & 0x3FF
-        return {0x10: "it", 0x16: "pt", 0x09: "en"}.get(primary, "en")
+        return {0x10: "it", 0x16: "pt", 0x09: "en", 0x0A: "es"}.get(primary, "en")
     except Exception:
         return "en"
 
@@ -90,6 +90,8 @@ class App:
         self.opt_video = tk.BooleanVar(value=s.get("video", True))
         self.opt_ocr = tk.BooleanVar(value=s.get("ocr", True))
         self.opt_split = tk.BooleanVar(value=s.get("split", False))
+        self.date_from = tk.StringVar(value="")  # intervallo di date: non salvato, vale per la singola chat
+        self.date_to = tk.StringVar(value="")
         self.model = s.get("model", "large-v3-turbo")
         self.speech = s.get("speech", self.lang.get())
         self.last_dir = s.get("last_dir", str(Path.home() / "Downloads"))
@@ -108,10 +110,11 @@ class App:
             root.iconbitmap(str(ICON))
         except Exception:
             pass
-        root.minsize(760, 640)
+        root.minsize(760, 560)
         root.protocol("WM_DELETE_WINDOW", self.on_close)
         self._build()
         self.retranslate()
+        self._fit_to_screen()
         self.root.after(200, self.poll)
         self.root.after(1000, self.tick)
 
@@ -140,7 +143,7 @@ class App:
         lf.grid(row=0, column=1, sticky="ne")
         self.w_lang = ttk.Label(lf)
         self.w_lang.pack(side="left", padx=(0, 6))
-        for code in ("it", "pt", "en"):
+        for code in ("it", "pt", "en", "es"):
             ttk.Radiobutton(lf, text=LANGS[code], value=code, variable=self.lang, style="Toolbutton",
                             command=self.on_lang).pack(side="left", padx=1)
 
@@ -182,6 +185,23 @@ class App:
         self.w_s_lbl.grid(row=1, column=0, sticky="e", padx=(0, 6), pady=(6, 0))
         self.w_speech = ttk.Combobox(right, state="readonly", width=32)
         self.w_speech.grid(row=1, column=1, sticky="w", pady=(6, 0))
+        # intervallo di date (facoltativo)
+        rng = ttk.Frame(self.w_opts)
+        rng.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        self.w_range_lbl = ttk.Label(rng)
+        self.w_range_lbl.grid(row=0, column=0, sticky="w", padx=(0, 10))
+        self.w_from_lbl = ttk.Label(rng)
+        self.w_from_lbl.grid(row=0, column=1, sticky="e", padx=(0, 4))
+        self.w_from = ttk.Entry(rng, textvariable=self.date_from, width=12)
+        self.w_from.grid(row=0, column=2, sticky="w")
+        self.w_to_lbl = ttk.Label(rng)
+        self.w_to_lbl.grid(row=0, column=3, sticky="e", padx=(12, 4))
+        self.w_to = ttk.Entry(rng, textvariable=self.date_to, width=12)
+        self.w_to.grid(row=0, column=4, sticky="w")
+        self.w_clear = ttk.Button(rng, command=lambda: (self.date_from.set(""), self.date_to.set("")))
+        self.w_clear.grid(row=0, column=5, sticky="w", padx=(10, 0))
+        self.w_date_hint = ttk.Label(rng, style="Sub.TLabel")
+        self.w_date_hint.grid(row=1, column=0, columnspan=6, sticky="w", pady=(2, 0))
         self.w_quality.bind("<<ComboboxSelected>>", lambda e: self._read_combos())
         self.w_speech.bind("<<ComboboxSelected>>", lambda e: self._read_combos())
 
@@ -239,9 +259,20 @@ class App:
         self.w_about = ttk.Button(foot, command=self.about)
         self.w_about.pack(side="right")
 
+    def _fit_to_screen(self):
+        """Su schermi bassi (es. portatili 1366x768) la finestra non deve uscire dallo schermo:
+        si riduce l'area dei messaggi, che è l'unica parte che si adatta."""
+        self.root.update_idletasks()
+        w = self.root.winfo_reqwidth()
+        h = self.root.winfo_reqheight()
+        max_h = self.root.winfo_screenheight() - 90  # barra delle applicazioni e bordo della finestra
+        if h > max_h:
+            self.root.minsize(760, min(560, max_h))
+            self.root.geometry(f"{w}x{max_h}+{max(0, (self.root.winfo_screenwidth() - w) // 2)}+0")
+
     def _text_tab(self) -> tk.Text:
         frame = ttk.Frame(self.nb)
-        txt = tk.Text(frame, height=8, wrap="word", font=("Consolas", 9), relief="flat", borderwidth=0,
+        txt = tk.Text(frame, height=5, wrap="word", font=("Consolas", 9), relief="flat", borderwidth=0,
                       state="disabled", padx=6, pady=4)
         sb = ttk.Scrollbar(frame, command=txt.yview)
         txt.configure(yscrollcommand=sb.set)
@@ -266,6 +297,11 @@ class App:
         self.w_cb_video.configure(text=t("g_opt_video"))
         self.w_cb_ocr.configure(text=t("g_opt_ocr"))
         self.w_cb_split.configure(text=t("g_opt_split"))
+        self.w_range_lbl.configure(text=t("g_range") + ":")
+        self.w_from_lbl.configure(text=t("g_from"))
+        self.w_to_lbl.configure(text=t("g_to"))
+        self.w_clear.configure(text=t("g_clear"))
+        self.w_date_hint.configure(text=t("g_date_hint"))
         self.w_q_lbl.configure(text=t("g_quality"))
         self.w_quality.configure(values=[t(k) for _, k in MODELS])
         self.w_quality.current(next((i for i, (m, _) in enumerate(MODELS) if m == self.model), 0))
@@ -365,6 +401,19 @@ class App:
         if not ENGINE.exists() or not Path(py).exists():
             messagebox.showerror("Zapp2md", t("g_not_installed", p=ENGINE), parent=self.root)
             return
+        try:
+            d_from = parse_user_date(self.date_from.get())
+        except ValueError:
+            messagebox.showwarning("Zapp2md", t("err_date", v=self.date_from.get().strip()), parent=self.root)
+            return
+        try:
+            d_to = parse_user_date(self.date_to.get())
+        except ValueError:
+            messagebox.showwarning("Zapp2md", t("err_date", v=self.date_to.get().strip()), parent=self.root)
+            return
+        if d_from and d_to and d_from > d_to:
+            messagebox.showwarning("Zapp2md", t("err_range", a=d_from.isoformat(), b=d_to.isoformat()), parent=self.root)
+            return
         self._read_combos()
         self._save()
         cmd = [py, "-u", str(ENGINE), src, "--progress-json", "--ui", self.lang.get(), "--model", self.model,
@@ -373,8 +422,18 @@ class App:
             cmd.append("--no-ocr")
         if self.opt_split.get():
             cmd.append("--split-by-year")
+        if d_from:
+            cmd += ["--from", d_from.isoformat()]
+        if d_to:
+            cmd += ["--to", d_to.isoformat()]
         if self.outdir.get():
             stem = Path(src).stem if Path(src).is_file() else Path(src).name
+            if d_from and d_to:
+                stem += f"_{d_from.isoformat()}_{d_to.isoformat()}"
+            elif d_from:
+                stem += f"_from-{d_from.isoformat()}"
+            elif d_to:
+                stem += f"_to-{d_to.isoformat()}"
             cmd += ["-o", str(Path(self.outdir.get()) / (stem + ".md"))]
         env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
         try:
@@ -418,7 +477,7 @@ class App:
     def _set_running_ui(self, running: bool):
         st = "disabled" if running else "normal"
         for w in (self.w_start, self.w_browse, self.w_folder, self.w_out_btn, self.w_cb_video, self.w_cb_ocr,
-                  self.w_cb_split):
+                  self.w_cb_split, self.w_from, self.w_to, self.w_clear):
             w.configure(state=st)
         self.w_quality.configure(state="disabled" if running else "readonly")
         self.w_speech.configure(state="disabled" if running else "readonly")
@@ -648,8 +707,20 @@ def main():
             tk.font.nametofont(name).configure(family="Segoe UI", size=10)  # type: ignore[attr-defined]
         except Exception:
             pass
-    initial = sys.argv[1] if len(sys.argv) > 1 else None
+    # argomenti: [file .zip] [--from DATA] [--to DATA]
+    initial, prefill, argv = None, {}, sys.argv[1:]
+    i = 0
+    while i < len(argv):
+        if argv[i] in ("--from", "--to") and i + 1 < len(argv):
+            prefill[argv[i]] = argv[i + 1]
+            i += 2
+            continue
+        if initial is None:
+            initial = argv[i]
+        i += 1
     app = App(root, initial)
+    app.date_from.set(prefill.get("--from", ""))
+    app.date_to.set(prefill.get("--to", ""))
     if initial and os.environ.get("W2MD_AUTOSTART") == "1":  # solo per i test automatici
         root.after(800, app.start)
     root.mainloop()

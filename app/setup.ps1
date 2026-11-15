@@ -1,4 +1,4 @@
-﻿# Zapp2md 1.0 - (c) 2026 Andrea Moretto - CC BY-NC-SA 4.0
+﻿# Zapp2md 1.1 - (c) 2026 Andrea Moretto - CC BY-NC-SA 4.0
 #
 # Prepara tutto il necessario nella cartella del programma:
 #   uv (gestore pacchetti) -> Python 3.12 portatile -> librerie -> modello di trascrizione.
@@ -15,7 +15,7 @@
 
 param(
     [string]$AppDir = $PSScriptRoot,
-    [ValidateSet("it", "pt", "en")][string]$Lang = "it",
+    [ValidateSet("it", "pt", "en", "es")][string]$Lang = "it",
     [switch]$Full,
     [switch]$NoPause
 )
@@ -26,19 +26,19 @@ $UvVersion = "0.12.18"
 $PythonVersion = "3.12"
 $Model = "large-v3-turbo"
 
-$Host.UI.RawUI.WindowTitle = "Zapp2md 1.0 - setup"
+$Host.UI.RawUI.WindowTitle = "Zapp2md 1.1 - setup"
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-function Msg([string]$it, [string]$pt, [string]$en) {
-    switch ($Lang) { "it" { $it } "pt" { $pt } default { $en } }
+function Msg([string]$it, [string]$pt, [string]$en, [string]$es = "") {
+    switch ($Lang) { "it" { $it } "pt" { $pt } "es" { if ($es) { $es } else { $en } } default { $en } }
 }
-function Step([string]$it, [string]$pt, [string]$en) {
+function Step([string]$it, [string]$pt, [string]$en, [string]$es = "") {
     Write-Host ""
-    Write-Host ("==> " + (Msg $it $pt $en)) -ForegroundColor Cyan
+    Write-Host ("==> " + (Msg $it $pt $en $es)) -ForegroundColor Cyan
 }
-function Info([string]$it, [string]$pt, [string]$en) {
-    Write-Host ("    " + (Msg $it $pt $en)) -ForegroundColor Gray
+function Info([string]$it, [string]$pt, [string]$en, [string]$es = "") {
+    Write-Host ("    " + (Msg $it $pt $en $es)) -ForegroundColor Gray
 }
 function Check([string]$what) {
     if ($LASTEXITCODE -ne 0) { throw "$what (exit code $LASTEXITCODE)" }
@@ -84,31 +84,31 @@ $log = Join-Path $AppDir "install.log"
 try { Start-Transcript -Path $log -Force | Out-Null } catch {}
 
 try {
-    Write-Host "Zapp2md 1.0  -  (c) 2026 Andrea Moretto  -  CC BY-NC-SA 4.0" -ForegroundColor Green
-    Write-Host (Msg "Cartella: $AppDir" "Pasta: $AppDir" "Folder: $AppDir")
+    Write-Host "Zapp2md 1.1  -  (c) 2026 Andrea Moretto  -  CC BY-NC-SA 4.0" -ForegroundColor Green
+    Write-Host (Msg "Cartella: $AppDir" "Pasta: $AppDir" "Folder: $AppDir" "Carpeta: $AppDir")
     Write-Host (Msg "Non chiudere questa finestra: si chiuderà da sola al termine." `
                     "Não feche esta janela: fecha-se sozinha no fim." `
-                    "Do not close this window: it closes by itself when finished.")
+                    "Do not close this window: it closes by itself when finished." "No cierres esta ventana: se cerrará sola al terminar.")
 
     if ($AppDir.Length -gt 100) {
         throw (Msg "Percorso di installazione troppo lungo (max 100 caratteri): $AppDir" `
                    "Caminho de instalação demasiado longo (máx. 100 caracteres): $AppDir" `
-                   "Installation path too long (max 100 characters): $AppDir")
+                   "Installation path too long (max 100 characters): $AppDir" "Ruta de instalación demasiado larga (máx. 100 caracteres): $AppDir")
     }
 
     if ($Full) {
         Step "Installazione completa: rimuovo i componenti esistenti e riscarico tutto..." `
              "Instalação completa: a remover os componentes existentes e a descarregar tudo de novo..." `
-             "Full installation: removing existing components and downloading everything again..."
+             "Full installation: removing existing components and downloading everything again..." "Instalación completa: elimino los componentes existentes y vuelvo a descargarlo todo..."
         foreach ($d in "venv", "python", "python_tmp", "uv", "models", "uvcache") { Remove-Dir (Join-Path $AppDir $d) }
     }
     Remove-Dir (Join-Path $AppDir "venv")        # resti di versioni di prova precedenti
     Remove-Dir (Join-Path $AppDir "python_tmp")
 
     # ---- 1. uv ---------------------------------------------------------------------------
-    Step "1/4  Strumento di installazione (uv)" "1/4  Ferramenta de instalação (uv)" "1/4  Installation tool (uv)"
+    Step "1/4  Strumento di installazione (uv)" "1/4  Ferramenta de instalação (uv)" "1/4  Installation tool (uv)" "1/4  Herramienta de instalación (uv)"
     if (Test-Uv $uv) {
-        Info "già presente" "já presente" "already present"
+        Info "già presente" "já presente" "already present" "ya presente"
     } else {
         Remove-Dir $uvDir
         if (-not $Full) {
@@ -117,16 +117,16 @@ try {
                 New-Item -ItemType Directory -Force $uvDir | Out-Null
                 Copy-Item $sys.Source $uv -Force
                 if (Test-Uv $uv) {
-                    Info "riutilizzato quello già presente sul PC" "reutilizado o que já existe no PC" "reused the one already on this PC"
+                    Info "riutilizzato quello già presente sul PC" "reutilizado o que já existe no PC" "reused the one already on this PC" "reutilizado el que ya hay en el PC"
                 } else { Remove-Dir $uvDir }
             }
         }
         if (-not (Test-Uv $uv)) {
-            Info "download (~20 MB)..." "a descarregar (~20 MB)..." "downloading (~20 MB)..."
+            Info "download (~20 MB)..." "a descarregar (~20 MB)..." "downloading (~20 MB)..." "descargando (~20 MB)..."
             $zip = Join-Path $env:TEMP "zapp2md-uv.zip"
             $urls = @("https://github.com/astral-sh/uv/releases/download/$UvVersion/uv-x86_64-pc-windows-msvc.zip",
                       "https://github.com/astral-sh/uv/releases/latest/download/uv-x86_64-pc-windows-msvc.zip")
-            if (-not (Get-File $urls $zip)) { throw (Msg "Download di uv non riuscito." "Falha ao descarregar o uv." "Could not download uv.") }
+            if (-not (Get-File $urls $zip)) { throw (Msg "Download di uv non riuscito." "Falha ao descarregar o uv." "Could not download uv." "No se ha podido descargar uv.") }
             New-Item -ItemType Directory -Force $uvDir | Out-Null
             Expand-Archive -Path $zip -DestinationPath $uvDir -Force
             Remove-Item $zip -Force -ErrorAction SilentlyContinue
@@ -147,7 +147,7 @@ try {
     # potrebbe bloccare per motivi di sicurezza.
     Step "2/4  Python $PythonVersion" "2/4  Python $PythonVersion" "2/4  Python $PythonVersion"
     if (Test-Python $py) {
-        Info "già presente" "já presente" "already present"
+        Info "già presente" "já presente" "already present" "ya presente"
     } else {
         Remove-Dir $pyDir
         if (-not $Full) {
@@ -166,14 +166,14 @@ try {
             foreach ($c in $cands) {
                 Copy-Item $c.FullName $pyDir -Recurse -Force
                 if (Test-Python $py) {
-                    Info "riutilizzato $($c.Name) già presente sul PC" "reutilizado $($c.Name) já presente no PC" "reused $($c.Name) already on this PC"
+                    Info "riutilizzato $($c.Name) già presente sul PC" "reutilizado $($c.Name) já presente no PC" "reused $($c.Name) already on this PC" "reutilizado $($c.Name) ya presente en el PC"
                     break
                 }
                 Remove-Dir $pyDir
             }
         }
         if (-not (Test-Python $py)) {
-            Info "download (~30 MB)..." "a descarregar (~30 MB)..." "downloading (~30 MB)..."
+            Info "download (~30 MB)..." "a descarregar (~30 MB)..." "downloading (~30 MB)..." "descargando (~30 MB)..."
             $list = (& $uv python list $PythonVersion --only-downloads --output-format json | Out-String) | ConvertFrom-Json
             Check "uv python list"
             $entry = $list | Where-Object { $_.implementation -eq "cpython" -and $_.os -eq "windows" -and
@@ -183,7 +183,7 @@ try {
             Info $entry.key $entry.key $entry.key
             $tgz = Join-Path $env:TEMP "zapp2md-python.tar.gz"
             if (-not (Get-File @($entry.url) $tgz)) {
-                throw (Msg "Download di Python non riuscito." "Falha ao descarregar o Python." "Could not download Python.")
+                throw (Msg "Download di Python non riuscito." "Falha ao descarregar o Python." "Could not download Python." "No se ha podido descargar Python.")
             }
             $tmp = Join-Path $AppDir "python_tmp"
             New-Item -ItemType Directory -Force $tmp | Out-Null
@@ -201,12 +201,12 @@ try {
     # ---- 3. Librerie ----------------------------------------------------------------------
     Step "3/4  Librerie (si scarica solo ciò che manca, max ~300 MB)" `
          "3/4  Bibliotecas (descarrega-se só o que falta, máx. ~300 MB)" `
-         "3/4  Libraries (only what is missing is downloaded, max ~300 MB)"
+         "3/4  Libraries (only what is missing is downloaded, max ~300 MB)" "3/4  Bibliotecas (solo se descarga lo que falta, máx. ~300 MB)"
     $sharedCache = Join-Path $env:LOCALAPPDATA "uv\cache"
     $useShared = (-not $Full) -and (Test-Path $sharedCache) -and (-not $env:UV_CACHE_DIR)
     $env:UV_CACHE_DIR = if ($useShared) { $sharedCache } else { $ownCache }
     if ($useShared) {
-        Info "uso i pacchetti già presenti nella cache di uv del PC" "uso os pacotes já presentes na cache do uv do PC" "using packages already in this PC's uv cache"
+        Info "uso i pacchetti già presenti nella cache di uv del PC" "uso os pacotes já presentes na cache do uv do PC" "using packages already in this PC's uv cache" "uso los paquetes ya presentes en la caché de uv del PC"
     }
     $req = Join-Path $AppDir "requirements.txt"
     $extra = @()
@@ -224,7 +224,7 @@ try {
     # ---- 4. Modello di trascrizione + verifica --------------------------------------------
     Step "4/4  Modello di trascrizione ($Model, ~1,6 GB se da scaricare)" `
          "4/4  Modelo de transcrição ($Model, ~1,6 GB se for preciso descarregar)" `
-         "4/4  Transcription model ($Model, ~1.6 GB if it must be downloaded)"
+         "4/4  Transcription model ($Model, ~1.6 GB if it must be downloaded)" "4/4  Modelo de transcripción ($Model, ~1,6 GB si hay que descargarlo)"
     $env:PYTHONIOENCODING = "utf-8"
     $engine = Join-Path $AppDir "zapp2md.py"
     if (-not $Full -and -not (Test-Path $modelsDir)) {
@@ -239,7 +239,7 @@ try {
         if ($reuse) {
             Info "già presente sul PC (cache di Hugging Face): riutilizzato" `
                  "já presente no PC (cache do Hugging Face): reutilizado" `
-                 "already on this PC (Hugging Face cache): reused"
+                 "already on this PC (Hugging Face cache): reused" "ya presente en el PC (caché de Hugging Face): reutilizado"
         } else {
             New-Item -ItemType Directory -Force $modelsDir | Out-Null
         }
@@ -250,7 +250,7 @@ try {
 
     if (-not $useShared) { Remove-Dir $ownCache }
     Write-Host ""
-    Write-Host (Msg "Installazione completata." "Instalação concluída." "Installation completed.") -ForegroundColor Green
+    Write-Host (Msg "Installazione completata." "Instalação concluída." "Installation completed." "Instalación completada.") -ForegroundColor Green
     try { Stop-Transcript | Out-Null } catch {}
     if (-not $NoPause) { Start-Sleep -Seconds 3 }
     exit 0
@@ -261,8 +261,8 @@ catch {
     Write-Host ""
     Write-Host (Msg "Installazione non completata. Controlla la connessione a internet e usa 'Ripara Zapp2md' dal menu Start. Dettagli: $log" `
                     "Instalação não concluída. Verifique a ligação à internet e use 'Reparar Zapp2md' no menu Iniciar. Detalhes: $log" `
-                    "Installation not completed. Check the internet connection and use 'Repair Zapp2md' from the Start menu. Details: $log") -ForegroundColor Yellow
+                    "Installation not completed. Check the internet connection and use 'Repair Zapp2md' from the Start menu. Details: $log" "Instalación no completada. Comprueba la conexión a internet y usa 'Reparar Zapp2md' en el menú Inicio. Detalles: $log") -ForegroundColor Yellow
     try { Stop-Transcript | Out-Null } catch {}
-    if (-not $NoPause) { Read-Host (Msg "Premi Invio per chiudere" "Prima Enter para fechar" "Press Enter to close") | Out-Null }
+    if (-not $NoPause) { Read-Host (Msg "Premi Invio per chiudere" "Prima Enter para fechar" "Press Enter to close" "Pulsa Intro para cerrar") | Out-Null }
     exit 1
 }

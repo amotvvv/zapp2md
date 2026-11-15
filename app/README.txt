@@ -1,6 +1,6 @@
-﻿Zapp2md 1.0
+﻿Zapp2md 1.1
 Copyright (c) 2026 Andrea Moretto - https://www.linkedin.com/in/andrea-moretto-mba/
-Licenza / Licença / Licence: CC BY-NC-SA 4.0 (vedi / ver / see LICENSE.txt)
+Licenza / Licença / Licence / Licencia: CC BY-NC-SA 4.0 (vedi / ver / see LICENSE.txt)
 
 ================================================================================
 ITALIANO
@@ -25,6 +25,11 @@ USO
 3. La finestra mostra avanzamento, tempo rimanente, file elaborati per tipo ed
    eventuali errori. "Interrompi" non fa perdere il lavoro: con "Avvia" riprende.
 4. Al termine: "Apri il risultato" apre il file .md da caricare nel tuo LLM.
+
+INTERVALLO DI DATE (facoltativo): nelle Opzioni indica "Dal" e/o "Al" (GG/MM/AAAA o
+AAAA-MM-GG) per elaborare solo i messaggi di quel periodo; il resto viene escluso e i
+suoi media non vengono elaborati. Il file prodotto ha le date nel nome, es.
+"Chat_2024-01-01_2024-12-31.md". Lasciando i campi vuoti si elabora tutta la chat.
 
 Tempi indicativi (PC senza scheda video dedicata): un vocale breve circa 6-8 secondi,
 un'ora di audio circa 30-40 minuti.
@@ -51,6 +56,9 @@ UTILIZAÇÃO
 3. A janela mostra o progresso, o tempo restante, os ficheiros por tipo e os erros.
 4. No fim: "Abrir o resultado" abre o ficheiro .md para carregar no seu LLM.
 
+INTERVALO DE DATAS (opcional): nas Opções indique "De" e/ou "Até" para processar só
+as mensagens desse período; o resto é excluído.
+
 MENU INICIAR: "Reparar Zapp2md" descarrega só o que falta; "Reparar Zapp2md
 (reinstalação completa)" descarrega tudo de novo.
 
@@ -69,8 +77,32 @@ USE
 3. The window shows progress, time remaining, files per type and any errors.
 4. When finished: "Open result" opens the .md file to upload to your LLM.
 
+DATE RANGE (optional): in Options set "From" and/or "To" to process only the messages of
+that period; everything else is excluded.
+
 START MENU: "Repair Zapp2md" downloads only what is missing; "Repair Zapp2md
 (full reinstall)" downloads everything again.
+
+================================================================================
+ESPAÑOL
+================================================================================
+Zapp2md convierte la exportación de un chat de WhatsApp (con mensajes de voz, fotos,
+vídeos y documentos) en un único documento Markdown (.md) en orden cronológico, listo
+para analizar con un LLM como Claude, ChatGPT o Gemini, o con otras herramientas de IA.
+Todo se procesa en tu ordenador.
+
+USO
+1. En el teléfono: chat > nombre del contacto (o menú) > Exportar chat > Adjuntar archivos.
+   Copia el archivo .zip al PC.
+2. Abre Zapp2md, elige el .zip y pulsa Iniciar (o arrastra el .zip sobre el icono).
+3. La ventana muestra el progreso, el tiempo restante, los archivos por tipo y los errores.
+4. Al terminar: "Abrir el resultado" abre el archivo .md para subirlo a tu LLM.
+
+INTERVALO DE FECHAS (opcional): en Opciones indica "Desde" y/o "Hasta" para procesar
+solo los mensajes de ese periodo; el resto se excluye.
+
+MENÚ INICIO: "Reparar Zapp2md" descarga solo lo que falta; "Reparar Zapp2md
+(reinstalación completa)" lo descarga todo de nuevo.
 
 WhatsApp is a trademark of WhatsApp LLC. Zapp2md is an independent project and is
 not affiliated with, endorsed or sponsored by WhatsApp LLC or Meta.

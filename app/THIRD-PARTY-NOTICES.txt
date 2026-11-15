@@ -1,4 +1,4 @@
-Zapp2md 1.0 - Third-party components
+Zapp2md 1.1 - Third-party components
 =========================================
 
 The Zapp2md installer contains only the Zapp2md source code (CC BY-NC-SA 4.0,
