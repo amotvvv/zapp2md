@@ -1,4 +1,4 @@
-// Zapp2md 1.0 - lanciatore
+// Zapp2md 1.1 - lanciatore
 // Copyright (c) 2026 Andrea Moretto - CC BY-NC-SA 4.0
 //
 // Piccolo eseguibile che avvia l'interfaccia grafica (python\pythonw.exe gui.py) dalla cartella del
@@ -18,8 +18,8 @@ using System.Windows.Forms;
 [assembly: AssemblyCompany("Andrea Moretto")]
 [assembly: AssemblyProduct("Zapp2md")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Andrea Moretto - CC BY-NC-SA 4.0")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
 
 static class Zapp2mdLauncher
 {
@@ -37,6 +37,9 @@ static class Zapp2mdLauncher
             if (lang == "it")
                 msg = "Installazione incompleta: manca\n" + (File.Exists(pythonw) ? gui : pythonw) +
                       "\n\nApri \"Ripara Zapp2md\" dal menu Start.";
+            else if (lang == "es")
+                msg = "Instalación incompleta: falta\n" + (File.Exists(pythonw) ? gui : pythonw) +
+                      "\n\nAbre \"Reparar Zapp2md\" en el menú Inicio.";
             else if (lang == "pt")
                 msg = "Instalação incompleta: falta\n" + (File.Exists(pythonw) ? gui : pythonw) +
                       "\n\nAbra \"Reparar Zapp2md\" no menu Iniciar.";
